@@ -6,11 +6,11 @@ import webbrowser
 import json
 import time,argparse
 
-APP_KEY = "2632202512"
-APP_SECRET = '162ea8999b1b50bc301a759a6687bc06'      # app secret
+APP_KEY = "weibo app key"
+APP_SECRET = 'weibo app secret'      # app secret
 CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
-LOGIN_NAME = 'nora.1982@gmail.com'
-PASSWORD = '820110'
+LOGIN_NAME = 'Your weibo login account'
+PASSWORD = 'your weibo login password'
 WAIT_SEC = 10 #waiting period (seconds)
 expires_in = 0
 
