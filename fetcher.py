@@ -6,12 +6,12 @@ import webbrowser
 import json
 import time,argparse
 
-APP_KEY = "weibo app key"
-APP_SECRET = 'weibo app secret'      # app secret
+APP_KEY = "2632202512"
+APP_SECRET = '162ea8999b1b50bc301a759a6687bc06'      # app secret
 CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
-LOGIN_NAME = 'Your weibo login account'
-PASSWORD = 'your weibo login password'
-WAIT_SEC = 10 #waiting period (seconds)
+LOGIN_NAME = 'Weibo account'
+PASSWORD = 'Weibo account password'
+WAIT_SEC = 24 #waiting period (seconds)
 expires_in = 0
 
 '''weibo request limits
@@ -57,10 +57,7 @@ parser.add_argument("outFile", help="output path file")
 parser.add_argument("-t", "--interval",  type=int, default=24, help="time interval between each request, default 24 seconds (150 requests/hour)" )
 
 args = parser.parse_args()
-
 WAIT_SEC = args.interval
-
-outf = open(args.outFile, 'a')
 
 print "waiting period = ", WAIT_SEC
 print "api_name:",args.api_name
@@ -68,6 +65,7 @@ while True:
   try:
     ts = time.time()
     print "current timestamp=", ts
+    outf = open(args.outFile, 'a')
     #renew token if expired
     if ts >= expires_in: 
       print "(re)getting access token"
@@ -86,15 +84,13 @@ while True:
     ret = client.__getattr__(api_1).__getattr__(api_2).get()
     #ret = client.trends.hourly.get()
     result = json.dumps(ret,ensure_ascii=False)
-    print result
+    #print result
     outf.write( result.encode('utf-8') )
     outf.write("\n")
-#     ret = client.trend.hourly.get(0
+    outf.close()
     time.sleep(WAIT_SEC)
 
   except UnicodeError:
     print "some exception, will retry"
     time.sleep(1)
     continue
-
-f.close()   
