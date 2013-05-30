@@ -9,8 +9,8 @@ import time,argparse
 APP_KEY = "2632202512"
 APP_SECRET = '162ea8999b1b50bc301a759a6687bc06'      # app secret
 CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
-LOGIN_NAME = 'Weibo account'
-PASSWORD = 'Weibo account password'
+LOGIN_NAME = 'Weibo login account'
+PASSWORD = 'Weibo login password'
 WAIT_SEC = 24 #waiting period (seconds)
 expires_in = 0
 
@@ -78,8 +78,15 @@ while True:
 
       print "access_token=" ,access_token, "expires_in=" ,expires_in, "current_time=",ts
       client.set_access_token(access_token, expires_in)
-    
-    (api_1, api_2) = re.split(r"/",args.api_name)
+   
+    api_parts = re.split(r"/",args.api_name)
+    if len(api_parts) == 1:
+      api_1 = api_parts[0]
+      api_2 = ""
+    else:
+      api_1 = api_parts[0]
+      api_2 = api_parts[1]
+ 
     print "api_1=",api_1, "api_2=", api_2
     ret = client.__getattr__(api_1).__getattr__(api_2).get()
     #ret = client.trends.hourly.get()
