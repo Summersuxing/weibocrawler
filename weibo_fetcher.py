@@ -9,8 +9,8 @@ import time,argparse
 APP_KEY = "527876810"
 APP_SECRET = 'bab48b7876ee6a0aa6393eaf995228cd'      # app secret
 CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
-LOGIN_NAME = 'Weibo account'
-PASSWORD = 'password'
+LOGIN_NAME = 'ld312@sina.cn'
+PASSWORD = '820110'
 WAIT_SEC = 24 #waiting period (seconds)
 expires_in = time.time()
 last_login = time.time()
@@ -56,12 +56,30 @@ parser = argparse.ArgumentParser(description="coninuously calling a weibo api an
 parser.add_argument("api_name", help=r'weibo api to be called. see , see: http://open.weibo.com/wiki/微博API')
 parser.add_argument("outFile", help="output path file")
 parser.add_argument("-t", "--interval",  type=int, default=24, help="time interval between each request, default 24 seconds (150 requests/hour)" )
+parser.add_argument("-p", "--parameters", help='extra api parameters, e.g. "p1=v1,p2=v2,etc..." ')
 
 args = parser.parse_args()
 WAIT_SEC = args.interval
 
+params_dict = {}
+
+if args.parameters:
+  p = re.split(',',args.parameters)
+  for item in p:
+    (k,v) = re.split('=', item)
+    params_dict[k] = v
+
+api_parts = re.split(r"/",args.api_name)
+if len(api_parts) == 1:
+  api_1 = api_parts[0]
+  api_2 = ""
+else:
+  api_1 = api_parts[0]
+  api_2 = api_parts[1]
+
 print "waiting period = ", WAIT_SEC
 print "api_name:",args.api_name
+print "params:", params_dict
 
 #everyone likes infinite loop!
 while True:
@@ -84,17 +102,11 @@ while True:
       print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_in)) ,
       print "current_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))
       client.set_access_token(access_token, expires_in)
-   
-    api_parts = re.split(r"/",args.api_name)
-    if len(api_parts) == 1:
-      api_1 = api_parts[0]
-      api_2 = ""
-    else:
-      api_1 = api_parts[0]
-      api_2 = api_parts[1]
  
     print "api call=", api_1 + "/"+ api_2
-    ret = client.__getattr__(api_1).__getattr__(api_2).get()
+    ret = client.__getattr__(api_1).__getattr__(api_2).get(**params_dict)
+    #a = client.__getattr__(api_1)
+    #b = a.__getattr
     #ret = client.trends.hourly.get()
     result = json.dumps(ret,ensure_ascii=False)
     #print result
