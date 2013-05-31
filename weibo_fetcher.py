@@ -133,8 +133,7 @@ if __name__=='__main__':
       result = fetcher.run(args.api_name, params_dict)
       print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", count, "times"
       
-
-      #write to a file in append mode
+      #writes output string to a file in append mode
       #this is inside an infinite loop so assume there are plently of
       #time between each loop!!!
       outf = open(args.outFile, 'a')
@@ -145,7 +144,8 @@ if __name__=='__main__':
       time.sleep(WAIT_SEC)
 
     except UnicodeError,urllib2.HTTPError:
-      print "some exception, will retry"
-      time.sleep(1)
+      retry_interval = 1
+      print "some exception, will retry after" , retry_interval , "second(s)"
+      time.sleep(retry_interval)
       continue
 

@@ -27,8 +27,8 @@ per app per user limits:
     ...
 
 
-execute ./fetcher.py  to see the needed parameters
-you will need to specify:
+execute ./weibo_fetcher.py  to see the needed parameters
+you will need to specify at least:
 
 <api_name>:  this can be any valid weibo api names, such as "statuses/public_timeline" and it will parse and run that api request, full list can be found here: http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
 
