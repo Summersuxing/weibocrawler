@@ -50,6 +50,9 @@ class SinaWeiboFetcher():
     print 'reason:',res.reason
     #print 'version===========',res.version
     location = res.getheader('location')
+    if not location:
+      print "incorrect server response, check app/login details?"
+      exit(-1)
     #print location
     code = location.split('=')[1]
     conn.close()
@@ -98,9 +101,9 @@ if __name__=='__main__':
   WAIT_SEC = 24 #waiting period (seconds)
   count = 0
 
-  parser = argparse.ArgumentParser(description="coninuously calling a weibo api and store the json output string to a file")
-  parser.add_argument("api_name", help=r'weibo api to be called. see , see: http://open.weibo.com/wiki/微博API')
-  parser.add_argument("outFile", help="output path file (will append if exists)")
+  parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")
+  parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://open.weibo.com/wiki/微博API')
+  parser.add_argument("outFile", help="output path file (append if exists)")
   parser.add_argument("-t", "--interval",  type=int, default=24, help="time interval between each request, default 24 seconds (150 requests/hour)" )
   parser.add_argument("-p", "--parameters", help='extra api parameters, e.g. "p1=v1,p2=v2,etc..." ')
 
@@ -116,7 +119,7 @@ if __name__=='__main__':
       params_dict[k] = v
 
   
-  print "waiting period = ", WAIT_SEC
+  print "\nwaiting period = ", WAIT_SEC
   print "api_name:",args.api_name
   print "params:", params_dict
 
@@ -140,12 +143,13 @@ if __name__=='__main__':
       outf.write( result.encode('utf-8') )
       outf.write("\n")
       outf.close()
-
+      #take a break, have a kit-kat
       time.sleep(WAIT_SEC)
 
-    except UnicodeError,urllib2.HTTPError:
+    except urllib2.HTTPError as e:
       retry_interval = 1
-      print "some exception, will retry after" , retry_interval , "second(s)"
+      print "exception:" , e.strerror
+      print "will retry after" , retry_interval , "second(s)"
       time.sleep(retry_interval)
       continue
 
