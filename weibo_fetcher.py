@@ -93,8 +93,8 @@ class SinaWeiboFetcher():
     return json.dumps(ret,ensure_ascii=False)
 
 if __name__=='__main__':
-  APP_KEY = "527876810"
-  APP_SECRET = 'bab48b7876ee6a0aa6393eaf995228cd'      # app secret
+  APP_KEY = "153640884"
+  APP_SECRET = '697fa6652e23837ec7e2cef5c6fdeeeb'      # app secret
   CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
   LOGIN_NAME = 'ld312@sina.cn'
   PASSWORD = '820110'
