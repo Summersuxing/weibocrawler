@@ -4,7 +4,7 @@ from weibo import APIClient
 import re, urllib,httplib
 import webbrowser
 import json
-import time,argparse
+import math,time,argparse
 
 '''weibo request limits
 一、针对一个服务器IP的请求次数限制
@@ -34,6 +34,8 @@ class SinaWeiboFetcher():
         self.weibo_login = str(weibo_login)
         self.weibo_password = str(weibo_password)
         self.callback_url = str(callback_url)
+        self.api_reset_time = 0
+        self.remaining_api_hits = 0
         #weibo login / get token
         self.authorize()
 
@@ -59,6 +61,13 @@ class SinaWeiboFetcher():
     #print code
     return code
 
+  #return the remaining API calls
+  def getHourlyAPICallLimit(self):
+    callDict = self.client.account.rate_limit_status.get() 
+    self.api_reset_time = float( callDict['reset_time_in_seconds'] )
+    self.remaining_api_hits = min(int(callDict['remaining_ip_hits']), int(callDict['remaining_user_hits']))
+    #this is the number of available api calls per hour, reset every whole hour 
+    return callDict['user_limit']
 
   def authorize(self):
     self.client = APIClient(app_key=APP_KEY, app_secret=APP_SECRET, redirect_uri=CALLBACK_URL)
@@ -93,22 +102,20 @@ class SinaWeiboFetcher():
     return json.dumps(ret,ensure_ascii=False)
 
 if __name__=='__main__':
-  APP_KEY = "153640884"
-  APP_SECRET = '697fa6652e23837ec7e2cef5c6fdeeeb'      # app secret
+  APP_KEY = "2632202512"
+  APP_SECRET = '162ea8999b1b50bc301a759a6687bc06'      # app secret
   CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
   LOGIN_NAME = 'ld312@sina.cn'
   PASSWORD = '820110'
-  WAIT_SEC = 24 #waiting period (seconds)
   count = 0
 
   parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")
   parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://open.weibo.com/wiki/微博API')
   parser.add_argument("outFile", help="output path file (append if exists)")
-  parser.add_argument("-t", "--interval",  type=int, default=24, help="time interval between each request, default 24 seconds (150 requests/hour)" )
+  parser.add_argument("-t", "--interval",  type=int, help="set manual time interval between each request in seconds" )
   parser.add_argument("-p", "--parameters", help='extra api parameters, e.g. "p1=v1,p2=v2,etc..." ')
 
   args = parser.parse_args()
-  WAIT_SEC = args.interval
   #parse parameters
   params_dict = {}
 
@@ -118,13 +125,20 @@ if __name__=='__main__':
       (k,v) = re.split('=', item)
       params_dict[k] = v
 
+  #initialize, will call authorize() first time here
+  fetcher = SinaWeiboFetcher(app_key=APP_KEY, app_secret=APP_SECRET, weibo_login=LOGIN_NAME, weibo_password=PASSWORD, callback_url=CALLBACK_URL)  
   
+  if args.interval and args.interval > 0:
+    print "manual interval"
+    WAIT_SEC = args.interval
+  else: #set wait interval dynamically
+    ## check how many api calls are available
+    noCalls = fetcher.getHourlyAPICallLimit()
+    WAIT_SEC = math.ceil(3600.0 / noCalls)
+
   print "\nwaiting period = ", WAIT_SEC
   print "api_name:",args.api_name
   print "params:", params_dict
-
-  #initialize, will call authorize() first time here
-  fetcher = SinaWeiboFetcher(app_key=APP_KEY, app_secret=APP_SECRET, weibo_login=LOGIN_NAME, weibo_password=PASSWORD, callback_url=CALLBACK_URL)  
 
   #everyone loves infinite loop!
   while True:
@@ -132,7 +146,7 @@ if __name__=='__main__':
       count+=1
       if fetcher.isTokenExpired() :
         fetcher.authorize()
-      
+
       result = fetcher.run(args.api_name, params_dict)
       print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", count, "times"
       
@@ -145,11 +159,13 @@ if __name__=='__main__':
       outf.close()
       #take a break, have a kit-kat
       time.sleep(WAIT_SEC)
-
-    except urllib2.HTTPError as e:
-      retry_interval = 1
-      print "exception:" , e.strerror
-      print "will retry after" , retry_interval , "second(s)"
-      time.sleep(retry_interval)
-      continue
+    
+    except:
+      pass
+    #except urllib.error.HTTPError as e:
+    #  retry_interval = 1
+    #  print "exception:" , e.strerror
+    #  print "will retry after" , retry_interval , "second(s)"
+    #  time.sleep(retry_interval)
+    #  continue
 
