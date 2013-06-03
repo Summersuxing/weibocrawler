@@ -1,0 +1,6 @@
+# ignore these files #
+###################
+*.o
+*.so
+*.pyc
+*.cfg

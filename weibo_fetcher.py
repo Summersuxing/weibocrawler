@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # -*- coding: utf8 -*-
 from weibo import APIClient
-import re, urllib,httplib
+import sys,re,urllib,httplib
 import webbrowser
 import json
 import math,time,argparse,ConfigParser
@@ -110,13 +110,11 @@ if __name__=='__main__':
   CALLBACK_URL = config.get('sinaweibo', 'sina_weibo_callback_url')  # callback url
   LOGIN_NAME = config.get('sinaweibo', 'sina_weibo_login')
   PASSWORD = config.get('sinaweibo', 'sina_weibo_password')
-  
-
   count = 0
 
   parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")
   parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://open.weibo.com/wiki/微博API')
-  parser.add_argument("outFile", help="output path file (append if exists)")
+  parser.add_argument("-o","--output", help="output path file (append if exists)")
   parser.add_argument("-t", "--interval",  type=int, help="set manual time interval between each request in seconds" )
   parser.add_argument("-p", "--parameters", help='extra api parameters, e.g. "p1=v1,p2=v2,etc..." ')
 
@@ -145,6 +143,11 @@ if __name__=='__main__':
   print "api_name:",args.api_name
   print "params:", params_dict
 
+  if args.output:
+    outf = open(args.output, 'a')
+  else:
+    outf = sys.stdout
+
   #everyone loves infinite loop!
   while True:
     try:
@@ -153,20 +156,17 @@ if __name__=='__main__':
         fetcher.authorize()
 
       result = fetcher.run(args.api_name, params_dict)
-      print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", count, "times"
-      
-      #writes output string to a file in append mode
-      #this is inside an infinite loop so assume there are plently of
-      #time between each loop!!!
-      outf = open(args.outFile, 'a')
+      print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times", 
+
       outf.write( result.encode('utf-8') )
       outf.write("\n")
-      outf.close()
+      #outf.flush() 
       #take a break, have a kit-kat
       time.sleep(WAIT_SEC)
     
     except:
-      pass
+      outf.flush()
+      outf.close()
     #except urllib.error.HTTPError as e:
     #  retry_interval = 1
     #  print "exception:" , e.strerror
