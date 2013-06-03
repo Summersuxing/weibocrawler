@@ -1,4 +1,4 @@
-This is script that continusously send Sina Weibo API requests and store the return
+This script continusously send Sina Weibo API requests and store the return
 json string.
 
 To be able to use this script you will need:
