@@ -4,7 +4,7 @@ from weibo import APIClient
 import re, urllib,httplib
 import webbrowser
 import json
-import math,time,argparse
+import math,time,argparse,ConfigParser
 
 '''weibo request limits
 一、针对一个服务器IP的请求次数限制
@@ -102,11 +102,16 @@ class SinaWeiboFetcher():
     return json.dumps(ret,ensure_ascii=False)
 
 if __name__=='__main__':
-  APP_KEY = "2632202512"
-  APP_SECRET = '162ea8999b1b50bc301a759a6687bc06'      # app secret
-  CALLBACK_URL = 'http://swiftkey.net/weibotest'  # callback url
-  LOGIN_NAME = 'ld312@sina.cn'
-  PASSWORD = '820110'
+  #populate config settings
+  config = ConfigParser.ConfigParser()
+  config.read('config.cfg')
+  APP_KEY = config.get('sinaweibo', 'sina_weibo_app_id')
+  APP_SECRET = config.get('sinaweibo', 'sina_weibo_app_secret')      # app secret
+  CALLBACK_URL = config.get('sinaweibo', 'sina_weibo_callback_url')  # callback url
+  LOGIN_NAME = config.get('sinaweibo', 'sina_weibo_login')
+  PASSWORD = config.get('sinaweibo', 'sina_weibo_password')
+  
+
   count = 0
 
   parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")

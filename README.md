@@ -34,8 +34,10 @@ per app per user limits:
 execute ./weibo_fetcher.py  to see the needed parameters
 you will need to specify at least:
 
-<api_name>:  this can be any valid weibo api names, such as "statuses/public_timeline" and it will parse and run that api request, full list can be found here: http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
+[api_name]: this can be any valid weibo api names, such as "statuses/public_timeline" and it will parse and run that api request, full list can be found here: http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
 
-<output file> : output (json string) will be written (append) here 
+[output file] : output (json string) will be written (append) here 
+if you do not specify the -t interval, it will work out the number of available api calls per hour from the
+server then evenly spreads the interval.
 
 Alternatively, ask @wei or @leilei for already setup app details.
