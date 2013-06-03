@@ -2,6 +2,7 @@ This script continusously send Sina Weibo API requests and store the return
 json string.
 
 To be able to use this script you will need:
+
 1. a Sina weibo account  : http://www.weibo.com
 2. access to a Sina Weibo app key
 3. access to a Sina Weibo app secret
@@ -37,6 +38,7 @@ you will need to specify at least:
 [api_name]: this can be any valid weibo api names, such as "statuses/public_timeline" and it will parse and run that api request, full list can be found here: http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
 
 [output file] : output (json string) will be written (append) here 
+
 if you do not specify the -t interval, it will work out the number of available api calls per hour from the
 server then evenly spreads the interval.
 
