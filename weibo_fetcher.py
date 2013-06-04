@@ -156,7 +156,7 @@ if __name__=='__main__':
         fetcher.authorize()
 
       result = fetcher.run(args.api_name, params_dict)
-      print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times", 
+      print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times"
 
       outf.write( result.encode('utf-8') )
       outf.write("\n")
@@ -164,7 +164,7 @@ if __name__=='__main__':
       #take a break, have a kit-kat
       time.sleep(WAIT_SEC)
     
-    except:
+    except KeyboardIterrupt:
       outf.flush()
       outf.close()
     #except urllib.error.HTTPError as e:
