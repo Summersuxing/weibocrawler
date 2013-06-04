@@ -164,13 +164,14 @@ if __name__=='__main__':
       #take a break, have a kit-kat
       time.sleep(WAIT_SEC)
     
-    except KeyboardIterrupt:
+    except KeyboardInterrupt:
       outf.flush()
       outf.close()
-    #except urllib.error.HTTPError as e:
-    #  retry_interval = 1
-    #  print "exception:" , e.strerror
-    #  print "will retry after" , retry_interval , "second(s)"
-    #  time.sleep(retry_interval)
-    #  continue
+    else:
+      #some error, retry
+      retry_interval = 5
+      print "unknown error, retry in", retry_interval, "seconds"
+      time.sleep(retry_interval)
+      continue
+
 
