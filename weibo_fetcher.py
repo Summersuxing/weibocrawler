@@ -49,12 +49,12 @@ class SinaWeiboFetcher():
     #print 'headers===========',res.getheaders()
     print res.msg
     print 'status:',res.status
-    print 'reason:',res.reason
+    #print 'reason:',res.reason
     #print 'version===========',res.version
     location = res.getheader('location')
     if not location:
-      print "incorrect server response, check app/login details?"
-      exit(-1)
+      raise Exception ("incorrect server response, check app/login details?")
+
     #print location
     code = location.split('=')[1]
     conn.close()
@@ -80,7 +80,7 @@ class SinaWeiboFetcher():
     #print "access_token=" ,r.access_token ,
     print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(r.expires_in)) ,
     print "login_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.last_login))
-
+    return True if r else False
 
   #check if the access_token is expired now
   def isTokenExpired(self):
@@ -111,6 +111,7 @@ if __name__=='__main__':
   LOGIN_NAME = config.get('sinaweibo', 'sina_weibo_login')
   PASSWORD = config.get('sinaweibo', 'sina_weibo_password')
   count = 0
+  retry_interval = 5
 
   parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")
   parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://open.weibo.com/wiki/微博API')
@@ -143,35 +144,25 @@ if __name__=='__main__':
   print "api_name:",args.api_name
   print "params:", params_dict
 
-  if args.output:
-    outf = open(args.output, 'a')
-  else:
-    outf = sys.stdout
-
-  #everyone loves infinite loop!
-  while True:
-    try:
+  with (open(args.output, 'a') if args.output else sys.stdout) as outf:
+    #everyone loves infinite loop!
+    while True:
       count+=1
-      if fetcher.isTokenExpired() :
-        fetcher.authorize()
-
-      result = fetcher.run(args.api_name, params_dict)
-      print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times"
-
-      outf.write( result.encode('utf-8') )
-      outf.write("\n")
-      #outf.flush() 
-      #take a break, have a kit-kat
-      time.sleep(WAIT_SEC)
-    
-    except KeyboardInterrupt:
-      outf.flush()
-      outf.close()
-    else:
-      #some error, retry
-      retry_interval = 5
-      print "unknown error, retry in", retry_interval, "seconds"
-      time.sleep(retry_interval)
-      continue
+      try:
+        if fetcher.isTokenExpired() :
+          fetcher.authorize()
+        result = fetcher.run(args.api_name, params_dict)
+      
+      except Exception:
+        print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"] unknown error, retry in", retry_interval, "seconds"
+        time.sleep(retry_interval)
+        
+      else:
+        print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times"
+        outf.write( result.encode('utf-8') + "\n")
+        
+        #take a break, have a kit-kat
+        time.sleep(WAIT_SEC)
+        
 
 
