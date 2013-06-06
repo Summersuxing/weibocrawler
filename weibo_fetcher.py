@@ -147,22 +147,26 @@ if __name__=='__main__':
   with (open(args.output, 'a') if args.output else sys.stdout) as outf:
     #everyone loves infinite loop!
     while True:
-      count+=1
       try:
+        count+=1
         if fetcher.isTokenExpired() :
           fetcher.authorize()
+
         result = fetcher.run(args.api_name, params_dict)
-      
-      except Exception:
-        print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"] unknown error, retry in", retry_interval, "seconds"
-        time.sleep(retry_interval)
-        
-      else:
-        print "localtime=[", time.strftime('%Y-%m-%d %H:%M:%S'),"], running", '"', args.api_name,'"', count, "times"
-        outf.write( result.encode('utf-8') + "\n")
-        
+        print "localtime=[%s], running api '%s' , loop=%s" % (time.strftime('%Y-%m-%d %H:%M:%S'),args.api_name,count)
+
+        outf.write( result.encode('utf-8') )
+        outf.write("\n")
         #take a break, have a kit-kat
         time.sleep(WAIT_SEC)
-        
-
-
+      
+      except KeyboardInterrupt:
+        outf.flush()
+        outf.close()
+      except (urllib2.URLError, httplib.BadStatusLine) as e:
+        #some error, retry
+        print "Connection error: %s, retry in %s seconds" % e.errstr , retry_interval
+        time.sleep(retry_interval)
+        continue
+      except:
+        print "unknown error: %s" % sys.exc_info()
