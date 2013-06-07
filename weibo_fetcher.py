@@ -78,8 +78,8 @@ class SinaWeiboFetcher():
     self.last_login = time.time()
     self.client.set_access_token(r.access_token,r.expires_in)
     #print "access_token=" ,r.access_token ,
-    print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(r.expires_in)) ,
-    print "login_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.last_login))
+    print "expires_in=%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(r.expires_in)) ,
+    print "login_time=%s" % time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.last_login))
     return True if r else False
 
   #check if the access_token is expired now
@@ -89,7 +89,7 @@ class SinaWeiboFetcher():
   #run a weibo api call, use this function after authorize() (e.g. must have a valid access_token)
   def run(self, api_name, params_dict) :
     #parse parameter string into dictionary obj.
-    api_parts = re.split(r"/",api_name)
+    api_parts = api_name.split(r"/")
     if len(api_parts) == 1:
       api_1 = api_parts[0]
       api_2 = ""
@@ -147,8 +147,8 @@ if __name__=='__main__':
   with (open(args.output, 'a') if args.output else sys.stdout) as outf:
     #everyone loves infinite loop!
     while True:
+      count +=1
       try:
-        count+=1
         if fetcher.isTokenExpired() :
           fetcher.authorize()
 
@@ -164,9 +164,9 @@ if __name__=='__main__':
         outf.flush()
         outf.close()
       except (urllib2.URLError, httplib.BadStatusLine) as e:
-        #some error, retry
         print "Connection error: %s, retry in %s seconds" % e.errstr , retry_interval
         time.sleep(retry_interval)
         continue
       except:
-        print "unknown error: %s" % sys.exc_info()
+        print "unknown error: %s, retry in %s seconds" % sys.exc_info(), retry_interval
+        time.sleep(retry_interval)
