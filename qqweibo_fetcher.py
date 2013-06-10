@@ -97,7 +97,7 @@ if __name__=='__main__':
       try:
         if fetcher.client.is_expires() :
           r = fetcher.client.refresh_token(fetcher.client.access_token)
-          fetcher.client.set_access_token(r.access_token, r.expires_in)
+          fetcher.client.set_access_token(r.access_token, fetcher.client.open_id, r.expires_in)
           print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_in)) ,
           print "current_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime( time.time() ))
 
