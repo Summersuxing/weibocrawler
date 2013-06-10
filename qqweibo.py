@@ -47,10 +47,10 @@ class JsonObject(dict):
     '''
     def __getattr__(self, attr):
         return self[attr]
-
+ 
     def __setattr__(self, attr, value):
         self[attr] = value
-
+ 
 def _encode_params(**kw):
     '''
     Encode parameters.
@@ -60,7 +60,7 @@ def _encode_params(**kw):
         qv = v.encode('utf-8') if isinstance(v, unicode) else str(v)
         args.append('%s=%s' % (k, urllib.quote(qv)))
     return '&'.join(args)
-
+ 
 def _encode_multipart(**kw):
     '''
     Build a multipart/form-data body with generated random boundary.
@@ -77,8 +77,8 @@ def _encode_multipart(**kw):
             if n != (-1):
                 ext = filename[n:].lower()
             content = v.read()
-            data.append('Content-Disposition: form-data; name="%s"; filename="hidden"' % k)
-            data.append('Content-Length: %d' % len(content))
+            data.append('Content-Disposition: form-data; name="%s"; filename="%s"' % (k,os.path.basename(filename)))
+            #data.append('Content-Length: %d' % len(content))
             data.append('Content-Type: %s\r\n' % _guess_content_type(ext))
             data.append(content)
         else:
@@ -86,50 +86,61 @@ def _encode_multipart(**kw):
             data.append(v.encode('utf-8') if isinstance(v, unicode) else v)
     data.append('--%s--\r\n' % boundary)
     return '\r\n'.join(data), boundary
-
+ 
 _CONTENT_TYPES = { '.png': 'image/png', '.gif': 'image/gif', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.jpe': 'image/jpeg' }
-
+ 
 def _guess_content_type(ext):
     return _CONTENT_TYPES.get(ext, 'application/octet-stream')
-
+ 
 _HTTP_GET = 0
 _HTTP_POST = 1
 _HTTP_UPLOAD = 2
-
+ 
 def _http_get(api_url, client=None, **kw):
     logging.info('GET %s' % api_url)
     return _http_call(api_url, _HTTP_GET, client, **kw)
-
+ 
 def _http_post(api_url, client=None, **kw):
     logging.info('POST %s' % api_url)
     return _http_call(api_url, _HTTP_POST, client, **kw)
-
+ 
 def _http_upload(api_url, client=None, **kw):
     logging.info('MULTIPART POST %s' % api_url)
     return _http_call(api_url, _HTTP_UPLOAD, client, **kw)
-
+ 
 def _http_call(api_url, method, client, **kw):
     '''
     send an http request and expect to return a json object if no error.
     '''
     params = None
     boundary = None
-    if method==_HTTP_UPLOAD:
-        params, boundary = _encode_multipart(**kw)
-    else:
-        params = _encode_params(**kw)
-
-    if client:
-        auth_params = _encode_params(
+ 
+    if method==_HTTP_UPLOAD or method==_HTTP_POST:
+        http_url=api_url
+        http_body, boundary =_encode_multipart(
             oauth_consumer_key=client.client_id,
             access_token=client.access_token,
             openid=client.openid,
-            oauth_version="2.a",
-            scope="all"
+            **kw
+            #oauth_version="2.a",
+            #scope=client.scope
+        )
+    else:
+        params = _encode_params(**kw)
+        if client:
+            auth_params = _encode_params(
+                oauth_consumer_key=client.client_id,
+                access_token=client.access_token,
+                clientip=client.clientip,
+                openid=client.openid,
+                oauth_version="2.a",
+                scope=client.scope
             )
-        api_url = '%s?%s' % (api_url, auth_params)
-    http_url = '%s&%s' % (api_url, params) if method==_HTTP_GET else api_url
-    http_body = None if method==_HTTP_GET else params
+            api_url = '%s?%s' % (api_url, auth_params)
+        http_url = '%s%s' % (api_url, params) if method==_HTTP_GET else api_url
+        http_body = None if method==_HTTP_GET else params
+ 
+    #print 'url:%s body:%s' % (http_url,http_body)
     req = urllib2.Request(http_url, data=http_body)
     if boundary:
         req.add_header('Content-Type', 'multipart/form-data; boundary=%s' % boundary)
@@ -138,21 +149,22 @@ def _http_call(api_url, method, client, **kw):
         body = resp.read()
     except urllib2.HTTPError, e:
         body = e.read()
-        
+ 
     try:
+        body=body.replace('callback','').replace('(','').replace(')','').replace(';','').replace('\n','')
         r = json.loads(body, object_hook=_obj_hook)
         if hasattr(r, 'errcode') and r.errcode != 0:
             raise APIError(r.errcode, getattr(r, 'msg', ''), http_url)
     except ValueError:
         r = body
     return r
-
+ 
 class HttpObject(object):
-
+ 
     def __init__(self, client, method):
         self.client = client
         self.method = method
-
+ 
     def __getattr__(self, attr):
         def wrap(**kw):
             if self.client.is_expires():
@@ -166,7 +178,7 @@ class APIClient(object):
     API client using synchronized invocation.
     '''
     def __init__(self, app_key, app_secret, redirect_uri=None,
-                 clientip='127.0.0.1', response_type='code',
+                 clientip='127.0.0.1', response_type='token',
                  domain='open.t.qq.com'):
         self.client_id = app_key
         self.client_secret = app_secret
@@ -198,9 +210,11 @@ class APIClient(object):
                         response_type = 'code', \
                         redirect_uri = redirect))
 
-    def request_access_token(self, code, redirect_uri=None, ):
+    #QQ weibo Implicit grant, no need to get code and exchange:
+    def request_access_token(self, code, redirect_uri=None ):
         '''
-        return access token as object: {"access_token":"your-access-token","expires_in":12345678}, expires_in is standard unix-epoch-time
+        return access token as object: {"access_token":"your-access-token","expires_in":12345678, "openid":openid}, 
+        expires_in is standard unix-epoch-time
         '''
         redirect = redirect_uri if redirect_uri else self.redirect_uri
         if not redirect:
@@ -209,7 +223,9 @@ class APIClient(object):
                 client_id = self.client_id, \
                 client_secret = self.client_secret, \
                 redirect_uri = redirect, \
-                code = code, grant_type = 'authorization_code')
+                grant_type = 'authorization_code', \
+                code = code)
+
         r = _obj_hook(dict([p.split('=') for p in body.split('&')]))
         r.expires_in = int(r.expires_in) + int(time.time())
         return r
@@ -227,52 +243,5 @@ class APIClient(object):
     def is_expires(self):
         return not self.access_token or time.time() > self.expires
 
-    #def __getattr__(self, attr):
-    #    return getattr(self.get, attr)
     def __getattr__(self, attr):
-        if '__' in attr:
-            return getattr(self.get, attr)
-        return _Callable(self, attr)
-
-_METHOD_MAP = { 'GET': _HTTP_GET, 'POST': _HTTP_POST, 'UPLOAD': _HTTP_UPLOAD }
-
-class _Executable(object):
-
-    def __init__(self, client, method, path):
-        self._client = client
-        self._method = method
-        self._path = path
-
-    def __call__(self, **kw):
-        method = _METHOD_MAP[self._method]
-        if method==_HTTP_POST and 'pic' in kw:
-            method = _HTTP_UPLOAD
-        return _http_call('%s%s.json' % (self._client.api_url, self._path), method, self._client.access_token, **kw)
-
-    def __str__(self):
-        return '_Executable (%s %s)' % (self._method, self._path)
-
-    __repr__ = __str__
-
-class _Callable(object):
-
-    def __init__(self, client, name):
-        self._client = client
-        self._name = name
-
-    def __getattr__(self, attr):
-        if attr=='get':
-            return _Executable(self._client_id, 'GET', self._name)
-        if attr=='post':
-            return _Executable(self._client_id, 'POST', self._name)
-        name = '%s/%s' % (self._name, attr)
-        return _Callable(self._client, name)
-
-    def __str__(self):
-        return '_Callable (%s)' % self._name
-
-    __repr__ = __str__
-
-if __name__=='__main__':
-    import doctest
-    doctest.testmod()
+        return getattr(self.get, attr)
