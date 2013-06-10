@@ -1,5 +1,5 @@
 
-This script continusously send Sina/QQ Weibo API requests and store the return
+provide scripts that continusously send Sina/QQ Weibo API requests and store the return
 json string.
 
 
@@ -38,7 +38,8 @@ per app per user limits:
     Comment: 60 / hour
     ...
 
-execute ./sinaweibo_fetcher.py  to see the needed parameters
+# run ./sinaweibo_fetcher.py  to see the needed parameters
+
 you will need to specify at least:
 
 [api_name]: this can be any valid weibo api names, such as "statuses/public_timeline" and it will parse and run that api request, full list can be found here: http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI
@@ -57,28 +58,29 @@ Alternatively, ask @wei or @leilei for already setup app details.
 #          							   qqweibo_fetcher.py																	 #
 ################################################################################
 
-Tencent QQ operate a similar Weibo service, you also need a QQ account for Oauth2
+Tencent QQ operates a similar Weibo service, you also need a QQ account for Oauth2
 and a userable app account. QQ Weibo has the following API request limit:
 
 read: 1000 / hour
 
-main script:
-
-
-
 currently the script cannot authenticate user automatically, mainly due to the additonal QQ login security
 (when the Oauth page popup sometimes it requires user to enter a captcha)
 
-As a result when you run this script, instead an redirect url will show and you should paste this to your browser,
-enter the login detais (and captha). Now here is the tricky part: if successful, it will redirect you to your call back
-URL, WITH PARAMETERS such as CODE and OPENID attached, such as:
+As a result when you run this script, a redirect url will be displayed and you should paste this to your browser and
+submit the login detais (and captha). Now here is the tricky part: if successful, it will redirect you to your call back
+URL, WITH PARAMETERS such as CODE and OPENID attached, for example:
 
 http://swiftkey.net/weibotest?code=e7f1680edde3d1fc0368319a94ebe0c4&openid=XXXXXX&openkey=XXXXXXXXX&state=
 
 we need the CODE to continue. Most browsers have a "developer/debug mode" (if you are using Chrome, press F12) that let you see the parameters. You will have to manually enter the code to the console and continue.
 
-NOTE that every QQ Weibo API requires (more) compulsory parameters than Sina Weibo, make sure you read the required paramter to pass to the script (using -p) , full API list can be found here:
+NOTE that every QQ Weibo API requires (more) compulsory parameters than Sina Weibo, make sure you read the required paramter to pass to the script (using -p) , 
 
+for example, the "statuses/public_timeline" API requires 3 additional parameters, e.g.
+
+# ./qqweibo_fetcher.py "statuses/public_timeline" -p "format=json,pos=0,reqnum=100"
+
+full API list can be found here:
 http://wiki.open.t.qq.com/index.php/API%E6%96%87%E6%A1%A3
 
 In the config file there is a qq_open_id field, this value is the "openid" value in the URL, this value is associated with
