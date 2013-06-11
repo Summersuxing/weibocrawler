@@ -1,31 +1,35 @@
 
-provide scripts that continusously send Sina/QQ Weibo API requests and store the return
-json string.
 
 ##                        Sina Weibo Fetcher
+
+###Intro
+This scripts continusously send Sina Weibo API requests and store the return
+json string upon execution.
+
 ###Sina Weibo App setup
-To be able to use this script you will need some Sina weibo details:
+To be able to use this script you will need the following Sina weibo details:
 
 1. a Sina weibo account  : http://www.weibo.com
 2. access to a Sina Weibo app key
 3. access to a Sina Weibo app secret
-4. if the app is a "test app", then the weibo account used to login must be added to the test app list.
-   login to http://open.weibo.com/apps/<appid\>/info/test 
-   and check / add
+4. if the app is a "test app", then the weibo account used to login must be added to    
+   the test app list. login to http://open.weibo.com/apps/<appid\>/info/test and check
 5. in sina app security settings (http://open.weibo.com/apps/<appid\>/info/advanced), 
-   the "domain binding"(绑定域名)
-   must match your callback url domain
+   the "domain binding"(绑定域名) must match your callback url domain
 
 You can create a developer app account once you have a Weibo account,
-but any app you create would be a "test app", meaning you will have limited
+but any app you created would be a "test app", meaning you will have limited
 API access (it is sufficient for getting user weibo entries, comments etc)
-Also there is a limit for no. of requests limitations:
-If you read Chinese, check here: 
-http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI#.E6.8E.A5.E5.8F.A3.E8.AE.BF.E9.97.AE.E9.A2.91.E6.AC.A1.E6.9D.83.E9.99.90
+Also there is a limit for no. of requests limitations.
 
 Alternatively, ask wei@swiftkey.net or leilei@swiftkey.net for already setup app details.
 
 ###API limits
+If you read Chinese, check here: 
+http://open.weibo.com/wiki/%E5%BE%AE%E5%8D%9AAPI#.E6.8E.A5.E5.8F.A3.E8.AE.BF.E9.97.AE.E9.A2.91.E6.AC.A1.E6.9D.83.E9.99.90
+
+In summary,
+
 Per IP limits:
 
 + test account: 1,000 requests/hour
@@ -54,6 +58,10 @@ if you do not specify the -t interval, it will work out the number of available 
 
 
 ##                 QQ Weibo Fetcher
+
+###Intro
+This scripts continusously send Sina Weibo API requests and store the return
+json string upon execution.
 
 ###QQ Weibo setup
 Tencent QQ operates a similar Weibo service, you also need a QQ account for Oauth2
@@ -90,4 +98,4 @@ you will need to specify at least:
 
 >http://wiki.open.t.qq.com/index.php/API%E6%96%87%E6%A1%A3
 
-if you do not specify the -t interval, it will work out the number of available api calls per hour from the server then evenly spreads the interval.
+if you do not specify the -t interval, it will use the default value (4 seconds).
