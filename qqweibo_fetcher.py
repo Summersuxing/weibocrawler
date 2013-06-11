@@ -39,7 +39,15 @@ class QQWeiboFetcher():
     self.client.set_access_token(r.access_token, self.open_id, r.expires_in)
     print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_in)) ,
     print "current_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime( time.time() ))
-
+  
+  #renew access_token
+  def renewToken(self):
+    r = self.client.refresh_token(self.client.access_token)
+    self.client.set_access_token(r.access_token, fetcher.client.open_id, r.expires_in)
+    print "renew access_token expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_in)) ,
+    print "current_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime( time.time() ))
+  
+  #send API request after authentication
   def run(self, api_name, params_dict) :
     #parse parameter string into dictionary obj.
     ret = self.client.__getattr__(api_name)(**params_dict)
@@ -58,8 +66,8 @@ if __name__=='__main__':
   count = 0
   retry_interval = 5
 
-  parser = argparse.ArgumentParser(description="coninuously calling a given Sina weibo api and store the json output string to a file")
-  parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://open.weibo.com/wiki/微博API')
+  parser = argparse.ArgumentParser(description="coninuously calling a given QQ weibo api and store the json output string to a file")
+  parser.add_argument("api_name", help=r'weibo api to be called. such as "statuses/pubilc_timeline", see: http://wiki.open.t.qq.com/index.php/API文档')
   parser.add_argument("-o","--output", help="output path file (append if exists)")
   parser.add_argument("-t", "--interval",  type=int, help="set manual time interval between each request in seconds" )
   parser.add_argument("-p", "--parameters", help='extra api parameters, e.g. "p1=v1,p2=v2,etc..." ')
@@ -95,15 +103,13 @@ if __name__=='__main__':
     while True:
       count +=1
       try:
-        if fetcher.client.is_expires() :
-          r = fetcher.client.refresh_token(fetcher.client.access_token)
-          fetcher.client.set_access_token(r.access_token, fetcher.client.open_id, r.expires_in)
-          print "expires_in=" , time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_in)) ,
-          print "current_time=", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime( time.time() ))
 
+        #renew access_token when it has less than 1 hour time remaining
+        if time.time() - fetcher.client.expires_in < 3600:
+          fetcher.renewToken()
 
         result = fetcher.run(args.api_name, params_dict)
-        print "localtime=[%s], running api '%s' , loop=%s" % (time.strftime('%Y-%m-%d %H:%M:%S'),args.api_name,count)
+        print "localtime=[%s], running api '%s' , loop=%s" % time.strftime('%Y-%m-%d %H:%M:%S'),args.api_name,count
 
         outf.write( result.encode('utf-8') )
         outf.write("\n")
@@ -117,7 +123,11 @@ if __name__=='__main__':
         print "Connection error: %s, retry in %s seconds" % e.errstr , retry_interval
         time.sleep(retry_interval)
         continue
-      #except:
-      #  print "unknown error: %s, retry in %s seconds" % sys.exc_info(), retry_interval
-      #  time.sleep(retry_interval)
+      except UnicodeEncodeError:
+        print "Error: %s, retry in %s seconds" % e.errstr , retry_interval
+        time.sleep(retry_interval)
+        continue
+      except :
+         print "unknown error, retry in %s seconds" % retry_interval
+         time.sleep(retry_interval)
 
