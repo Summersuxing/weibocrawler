@@ -163,10 +163,10 @@ if __name__=='__main__':
       except KeyboardInterrupt:
         outf.flush()
         outf.close()
-      except (urllib2.URLError, httplib.BadStatusLine) as e:
+      except ( httplib.BadStatusLine) as e:
         print "Connection error: %s, retry in %s seconds" % e.errstr , retry_interval
         time.sleep(retry_interval)
         continue
-      except:
-        print "unknown error: %s, retry in %s seconds" % sys.exc_info(), retry_interval
+      except (BaseException) as e:
+        print "error %s, retry in %s seconds" % e.errstr , retry_interval
         time.sleep(retry_interval)

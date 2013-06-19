@@ -127,7 +127,7 @@ if __name__=='__main__':
         print "Error: %s, retry in %s seconds" % e.errstr , retry_interval
         time.sleep(retry_interval)
         continue
-      except :
-         print "unknown error, retry in %s seconds" % retry_interval
+      except (BaseException) as e:
+         print "error %s, retry in %s seconds" % e.errstr, retry_interval
          time.sleep(retry_interval)
 
