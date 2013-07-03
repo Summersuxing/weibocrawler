@@ -120,14 +120,14 @@ if __name__=='__main__':
         outf.flush()
         outf.close()
       except ( httplib.BadStatusLine) as e:
-        print "Connection error: %s, retry in %s seconds" % e.errstr , retry_interval
+        print "Connection error: %s, retry in %s seconds" % e.strerror , retry_interval
         time.sleep(retry_interval)
         continue
       except UnicodeEncodeError:
-        print "Error: %s, retry in %s seconds" % e.errstr , retry_interval
+        print "Error: %s, retry in %s seconds" % e.strerror , retry_interval
         time.sleep(retry_interval)
         continue
       except (BaseException) as e:
-         print "error %s, retry in %s seconds" % e.errstr, retry_interval
+         print "error %s, retry in %s seconds" % e.strerror, retry_interval
          time.sleep(retry_interval)
 
