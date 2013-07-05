@@ -114,20 +114,20 @@ if __name__=='__main__':
         outf.write( result.encode('utf-8') )
         outf.write("\n")
         #take a break, have a kit-kat
-        time.sleep(WAIT_SEC)
+        (time.sleep(WAIT_SEC)
       
       except KeyboardInterrupt:
         outf.flush()
         outf.close()
       except ( httplib.BadStatusLine) as e:
-        print "Connection error: %s, retry in %s seconds" % e.strerror , retry_interval
+        print "Connection error: %s, retry in %s seconds" % (e.strerror , retry_interval)
         time.sleep(retry_interval)
         continue
       except UnicodeEncodeError:
-        print "Error: %s, retry in %s seconds" % e.strerror , retry_interval
+        print "Error: %s, retry in %s seconds" % (e.strerror , retry_interval)
         time.sleep(retry_interval)
         continue
       except (BaseException) as e:
-         print "error %s, retry in %s seconds" % e.strerror, retry_interval
+         print "error %s, retry in %s seconds" % (e, retry_interval)
          time.sleep(retry_interval)
 
